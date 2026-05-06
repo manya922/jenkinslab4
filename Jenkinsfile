@@ -53,7 +53,7 @@ pipeline {
         stage('GitHub Release') {
             steps {
                 script {
-                    def jarFile = "target/JenkinsLab4-1.0-SNAPSHOT-jar-with-dependencies.jar"
+                    def jarFile = "jenkinslab4-1.0-SNAPSHOT-jar-with-dependencies.jar"
                     def tagName = "release-v${BUILD_NUMBER}"
 
                     bat """
