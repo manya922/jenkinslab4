@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven'
+        jdk 'jdk21'
+    }
+
+    environment {
+        GH_TOKEN = credentials('github-token')
+        REPO_NAME = 'https://github.com/manya922/jenkinslab4.git'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Clean & Compile') {
+            steps {
+                bat 'mvn clean compile'
+            }
+        }
+
+        stage('Static Code Analysis') {
+            steps {
+                bat 'mvn spotbugs:check || exit 0'
+                bat 'mvn checkstyle:check || exit 0'
+                bat 'mvn pmd:check || exit 0'
+
+                recordIssues tools: [
+                    spotBugs(pattern: '**/spotbugsXml.xml'),
+                    checkStyle(pattern: '**/checkstyle-result.xml'),
+                    pmdParser(pattern: '**/pmd.xml')
+                ]
+            }
+        }
+
+        stage('Build JAR') {
+            steps {
+                bat 'mvn package -DskipTests'
+            }
+        }
+
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ MAIN ветка: сборка и релиз успешны"
+        }
+    }
+}
